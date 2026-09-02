@@ -135,228 +135,242 @@ def create_app(config_class=Config):
                 logger.error(f"Error loading unread messages for user {current_user.id}: {str(e)}")
                 g.unread_messages = 0
 
-    # CLI command for database initialization and seeding (Strict UK / Personalized)
-    @app.cli.command('init-db')
-    def init_db_command():
+    # Helper function for initial clinical database seeding
+    def seed_initial_data():
         from werkzeug.security import generate_password_hash
         from app.services.schedule_service import generate_doctor_schedules
-        with app.app_context():
-            try:
-                db.drop_all()
-                db.create_all()
-                logger.info("Database schema initialized.")
+        try:
+            # Admin Account: Vitalii Shmatolokha
+            admin = User(
+                email='admin@healthcare.co.uk',
+                password=generate_password_hash('admin123'),
+                name='Vitalii Shmatolokha',
+                role='admin'
+            )
+            db.session.add(admin)
 
-                # Admin Account: Vitalii Shmatolokha
-                admin = User(
-                    email='admin@healthcare.co.uk',
-                    password=generate_password_hash('admin123'),
-                    name='Vitalii Shmatolokha',
-                    role='admin'
-                )
-                db.session.add(admin)
+            # Primary Patient Account: Vitalii Shmatolokha
+            patient = User(
+                email='patient@healthcare.co.uk',
+                password=generate_password_hash('patient123'),
+                name='Vitalii Shmatolokha',
+                role='patient',
+                family_doctor_id=2
+            )
+            db.session.add(patient)
 
-                # Primary Patient Account: Vitalii Shmatolokha
-                patient = User(
-                    email='patient@healthcare.co.uk',
-                    password=generate_password_hash('patient123'),
-                    name='Vitalii Shmatolokha',
-                    role='patient',
-                    family_doctor_id=2
-                )
-                db.session.add(patient)
+            # Doctor 1: Dr. James Smith (Lead GP)
+            doctor1 = User(
+                email='doctor@healthcare.co.uk',
+                password=generate_password_hash('doctor123'),
+                name='Dr. James Smith',
+                role='doctor',
+                specialty='General Practice (GP)'
+            )
+            db.session.add(doctor1)
 
-                # Doctor 1: Dr. James Smith (Lead GP)
-                doctor1 = User(
-                    email='doctor@healthcare.co.uk',
-                    password=generate_password_hash('doctor123'),
-                    name='Dr. James Smith',
-                    role='doctor',
-                    specialty='General Practice (GP)'
-                )
-                db.session.add(doctor1)
+            # Doctor 2: Dr. Eleanor Davies (Cardiologist)
+            doctor2 = User(
+                email='cardiologist@healthcare.co.uk',
+                password=generate_password_hash('doctor123'),
+                name='Dr. Eleanor Davies',
+                role='doctor',
+                specialty='Cardiology'
+            )
+            db.session.add(doctor2)
 
-                # Doctor 2: Dr. Eleanor Davies (Cardiologist)
-                doctor2 = User(
-                    email='cardiologist@healthcare.co.uk',
-                    password=generate_password_hash('doctor123'),
-                    name='Dr. Eleanor Davies',
-                    role='doctor',
-                    specialty='Cardiology'
-                )
-                db.session.add(doctor2)
+            # Doctor 3: Dr. Alistair Finch (Clinical Oncology)
+            doctor3 = User(
+                email='oncologist@healthcare.co.uk',
+                password=generate_password_hash('doctor123'),
+                name='Dr. Alistair Finch',
+                role='doctor',
+                specialty='Clinical Oncology'
+            )
+            db.session.add(doctor3)
+            db.session.commit()
 
-                # Doctor 3: Dr. Alistair Finch (Clinical Oncology)
-                doctor3 = User(
-                    email='oncologist@healthcare.co.uk',
-                    password=generate_password_hash('doctor123'),
-                    name='Dr. Alistair Finch',
-                    role='doctor',
-                    specialty='Clinical Oncology'
-                )
-                db.session.add(doctor3)
-                db.session.commit()
-
-                # Seed Appointments
-                appointments = [
-                    Appointment(
-                        patient_id=patient.id,
-                        doctor_id=doctor1.id,
-                        date=datetime.now(timezone.utc) - timedelta(days=2),
-                        status='completed',
-                        is_online=True,
-                        created_at=datetime.now(timezone.utc) - timedelta(days=2)
-                    ),
-                    Appointment(
-                        patient_id=patient.id,
-                        doctor_id=doctor2.id,
-                        date=datetime.now(timezone.utc) - timedelta(days=1),
-                        status='completed',
-                        is_online=False,
-                        created_at=datetime.now(timezone.utc) - timedelta(days=1)
-                    ),
-                    Appointment(
-                        patient_id=patient.id,
-                        doctor_id=doctor1.id,
-                        date=datetime.now(timezone.utc) + timedelta(hours=3),
-                        status='scheduled',
-                        is_online=True,
-                        created_at=datetime.now(timezone.utc)
-                    )
-                ]
-                db.session.add_all(appointments)
-                db.session.commit()
-
-                # Seed UK Medical Records
-                medical_records = [
-                    MedicalRecord(
-                        patient_id=patient.id,
-                        appointment_id=appointments[0].id,
-                        doctor_notes="Patient presents with acute upper respiratory tract symptoms. Lungs clear on auscultation. Advised rest, oral fluids, and paracetamol.",
-                        diagnosis='Acute Upper Respiratory Tract Infection (URTI)',
-                        created_at=datetime.now(timezone.utc) - timedelta(days=2)
-                    ),
-                    MedicalRecord(
-                        patient_id=patient.id,
-                        appointment_id=appointments[1].id,
-                        doctor_notes="Routine cardiovascular assessment and blood pressure review. Blood pressure 124/82 mmHg. Resting ECG normal sinus rhythm.",
-                        diagnosis='Essential Hypertension — Routine Review',
-                        created_at=datetime.now(timezone.utc) - timedelta(days=1)
-                    )
-                ]
-                db.session.add_all(medical_records)
-                db.session.commit()
-
-                # Seed UK Prescriptions (BNF Standards & £ Currency)
-                prescriptions = [
-                    Prescription(
-                        patient_id=patient.id,
-                        medical_record_id=medical_records[0].id,
-                        medication_name='Paracetamol 500mg tablets',
-                        dosage='1000 mg (2 tablets) four times daily as required (max 4g/24h)',
-                        instructions='Take orally with a glass of water. Standard NHS prescription charge: £9.90.',
-                        is_active=True,
-                        created_at=datetime.now(timezone.utc) - timedelta(days=2)
-                    ),
-                    Prescription(
-                        patient_id=patient.id,
-                        medical_record_id=medical_records[1].id,
-                        medication_name='Amlodipine 5mg tablets',
-                        dosage='5 mg once daily in the morning',
-                        instructions='Continuous maintenance therapy for blood pressure regulation.',
-                        is_active=True,
-                        created_at=datetime.now(timezone.utc) - timedelta(days=1)
-                    )
-                ]
-                db.session.add_all(prescriptions)
-
-                # Seed Prescription Refill Request
-                prescription_request = PrescriptionRequest(
+            # Seed Appointments
+            appointments = [
+                Appointment(
                     patient_id=patient.id,
                     doctor_id=doctor1.id,
-                    medication_name='Salbutamol 100mcg inhaler (CFC-free)',
-                    reason='Repeat prescription request for seasonal exercise-induced bronchospasm',
-                    status='pending',
+                    date=datetime.now(timezone.utc) - timedelta(days=2),
+                    status='completed',
+                    is_online=True,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=2)
+                ),
+                Appointment(
+                    patient_id=patient.id,
+                    doctor_id=doctor2.id,
+                    date=datetime.now(timezone.utc) - timedelta(days=1),
+                    status='completed',
+                    is_online=False,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=1)
+                ),
+                Appointment(
+                    patient_id=patient.id,
+                    doctor_id=doctor1.id,
+                    date=datetime.now(timezone.utc) + timedelta(hours=3),
+                    status='scheduled',
+                    is_online=True,
                     created_at=datetime.now(timezone.utc)
                 )
-                db.session.add(prescription_request)
+            ]
+            db.session.add_all(appointments)
+            db.session.commit()
 
-                # Seed Clinical Health Guides
-                sample_guides = [
-                    HealthGuide(
-                        title='Managing Blood Pressure: NHS Clinical Guidance',
-                        description='Evidence-based lifestyle interventions and blood pressure monitoring in primary care.',
-                        content='Maintaining blood pressure within healthy parameters (below 130/80 mmHg in clinic) requires balanced salt intake (<6g daily), 150 minutes of moderate aerobic exercise weekly, and regular ambulatory blood pressure monitoring.'
-                    ),
-                    HealthGuide(
-                        title='Respiratory Tract Infections: Symptom Self-Management',
-                        description='Guidance on managing common viral colds, influenza, and when to seek urgent GP consultation.',
-                        content='Adequate hydration, warm fluids, antipyretic analgesia (paracetamol or ibuprofen), and recognizing red-flag symptoms such as breathlessness, haemoptysis, or chest pain.'
-                    ),
-                    HealthGuide(
-                        title='Cardiovascular Health & Lipid Profile Interpretation',
-                        description='Understanding QRISK3 scores, cholesterol ratios, and cardiovascular risk reduction.',
-                        content='Maintaining optimal non-HDL cholesterol levels, adopting a Mediterranean-style dietary programme, and attending regular NHS Health Checks.'
-                    )
-                ]
-                db.session.add_all(sample_guides)
-
-                # Seed Direct Messages
-                messages = [
-                    Message(
-                        sender_id=patient.id,
-                        receiver_id=doctor1.id,
-                        content='Good morning Dr. Smith, I have submitted a repeat prescription request for my inhaler.',
-                        created_at=datetime.now(timezone.utc) - timedelta(hours=2),
-                        is_read=True
-                    ),
-                    Message(
-                        sender_id=doctor1.id,
-                        receiver_id=patient.id,
-                        content='Good morning Vitalii. I have reviewed your request and authorised the repeat prescription. It has been routed to your designated pharmacy.',
-                        created_at=datetime.now(timezone.utc) - timedelta(hours=1),
-                        is_read=False
-                    )
-                ]
-                db.session.add_all(messages)
-                db.session.commit()
-
-                # Generate doctor availability slots
-                start_date = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-                generate_doctor_schedules(
-                    doctor_id=doctor1.id,
-                    start_date=start_date,
-                    days=7,
-                    start_hour=9,
-                    end_hour=17,
-                    slot_duration=30,
-                    skip_weekends=True,
-                    delete_existing=False
+            # Seed UK Medical Records
+            medical_records = [
+                MedicalRecord(
+                    patient_id=patient.id,
+                    appointment_id=appointments[0].id,
+                    doctor_notes="Patient presents with acute upper respiratory tract symptoms. Lungs clear on auscultation. Advised rest, oral fluids, and paracetamol.",
+                    diagnosis='Acute Upper Respiratory Tract Infection (URTI)',
+                    created_at=datetime.now(timezone.utc) - timedelta(days=2)
+                ),
+                MedicalRecord(
+                    patient_id=patient.id,
+                    appointment_id=appointments[1].id,
+                    doctor_notes="Routine cardiovascular assessment and blood pressure review. Blood pressure 124/82 mmHg. Resting ECG normal sinus rhythm.",
+                    diagnosis='Essential Hypertension — Routine Review',
+                    created_at=datetime.now(timezone.utc) - timedelta(days=1)
                 )
-                generate_doctor_schedules(
-                    doctor_id=doctor2.id,
-                    start_date=start_date,
-                    days=7,
-                    start_hour=10,
-                    end_hour=18,
-                    slot_duration=30,
-                    skip_weekends=True,
-                    delete_existing=False
-                )
-                generate_doctor_schedules(
-                    doctor_id=doctor3.id,
-                    start_date=start_date,
-                    days=7,
-                    start_hour=9,
-                    end_hour=16,
-                    slot_duration=30,
-                    skip_weekends=True,
-                    delete_existing=False
-                )
+            ]
+            db.session.add_all(medical_records)
+            db.session.commit()
 
-                print('Database initialised and seeded with UK clinical fixtures and personalized accounts!')
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Failed to initialise database: {str(e)}", exc_info=True)
-                print(f"Error initialising database: {str(e)}")
+            # Seed UK Prescriptions (BNF Standards & £ Currency)
+            prescriptions = [
+                Prescription(
+                    patient_id=patient.id,
+                    medical_record_id=medical_records[0].id,
+                    medication_name='Paracetamol 500mg tablets',
+                    dosage='1000 mg (2 tablets) four times daily as required (max 4g/24h)',
+                    instructions='Take orally with a glass of water. Standard NHS prescription charge: £9.90.',
+                    is_active=True,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=2)
+                ),
+                Prescription(
+                    patient_id=patient.id,
+                    medical_record_id=medical_records[1].id,
+                    medication_name='Amlodipine 5mg tablets',
+                    dosage='5 mg once daily in the morning',
+                    instructions='Continuous maintenance therapy for blood pressure regulation.',
+                    is_active=True,
+                    created_at=datetime.now(timezone.utc) - timedelta(days=1)
+                )
+            ]
+            db.session.add_all(prescriptions)
+
+            # Seed Prescription Refill Request
+            prescription_request = PrescriptionRequest(
+                patient_id=patient.id,
+                doctor_id=doctor1.id,
+                medication_name='Salbutamol 100mcg inhaler (CFC-free)',
+                reason='Repeat prescription request for seasonal exercise-induced bronchospasm',
+                status='pending',
+                created_at=datetime.now(timezone.utc)
+            )
+            db.session.add(prescription_request)
+
+            # Seed Clinical Health Guides
+            sample_guides = [
+                HealthGuide(
+                    title='Managing Blood Pressure: NHS Clinical Guidance',
+                    description='Evidence-based lifestyle interventions and blood pressure monitoring in primary care.',
+                    content='Maintaining blood pressure within healthy parameters (below 130/80 mmHg in clinic) requires balanced salt intake (<6g daily), 150 minutes of moderate aerobic exercise weekly, and regular ambulatory blood pressure monitoring.'
+                ),
+                HealthGuide(
+                    title='Respiratory Tract Infections: Symptom Self-Management',
+                    description='Guidance on managing common viral colds, influenza, and when to seek urgent GP consultation.',
+                    content='Adequate hydration, warm fluids, antipyretic analgesia (paracetamol or ibuprofen), and recognizing red-flag symptoms such as breathlessness, haemoptysis, or chest pain.'
+                ),
+                HealthGuide(
+                    title='Cardiovascular Health & Lipid Profile Interpretation',
+                    description='Understanding QRISK3 scores, cholesterol ratios, and cardiovascular risk reduction.',
+                    content='Maintaining optimal non-HDL cholesterol levels, adopting a Mediterranean-style dietary programme, and attending regular NHS Health Checks.'
+                )
+            ]
+            db.session.add_all(sample_guides)
+
+            # Seed Direct Messages
+            messages = [
+                Message(
+                    sender_id=patient.id,
+                    receiver_id=doctor1.id,
+                    content='Good morning Dr. Smith, I have submitted a repeat prescription request for my inhaler.',
+                    created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+                    is_read=True
+                ),
+                Message(
+                    sender_id=doctor1.id,
+                    receiver_id=patient.id,
+                    content='Good morning Vitalii. I have reviewed your request and authorised the repeat prescription. It has been routed to your designated pharmacy.',
+                    created_at=datetime.now(timezone.utc) - timedelta(hours=1),
+                    is_read=False
+                )
+            ]
+            db.session.add_all(messages)
+            db.session.commit()
+
+            # Generate doctor availability slots
+            start_date = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            generate_doctor_schedules(
+                doctor_id=doctor1.id,
+                start_date=start_date,
+                days=7,
+                start_hour=9,
+                end_hour=17,
+                slot_duration=30,
+                skip_weekends=True,
+                delete_existing=False
+            )
+            generate_doctor_schedules(
+                doctor_id=doctor2.id,
+                start_date=start_date,
+                days=7,
+                start_hour=10,
+                end_hour=18,
+                slot_duration=30,
+                skip_weekends=True,
+                delete_existing=False
+            )
+            generate_doctor_schedules(
+                doctor_id=doctor3.id,
+                start_date=start_date,
+                days=7,
+                start_hour=9,
+                end_hour=16,
+                slot_duration=30,
+                skip_weekends=True,
+                delete_existing=False
+            )
+
+            logger.info("Database auto-seeded with UK clinical fixtures and personalized accounts successfully!")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Failed to seed database: {str(e)}", exc_info=True)
+
+    # CLI command for manual database reset/initialization
+    @app.cli.command('init-db')
+    def init_db_command():
+        with app.app_context():
+            db.drop_all()
+            db.create_all()
+            seed_initial_data()
+            print("Database dropped, recreated, and freshly seeded!")
+
+    # Auto-initialize database tables and seed if database is empty on application startup
+    with app.app_context():
+        try:
+            db.create_all()
+            if User.query.first() is None:
+                logger.info("Empty database detected on startup. Running automated clinical seeding...")
+                seed_initial_data()
+            else:
+                logger.info("Database schema verified and active records detected.")
+        except Exception as e:
+            logger.warning(f"Startup DB auto-init note: {str(e)}")
 
     return app
