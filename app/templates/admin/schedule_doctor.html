@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block title %}Clinic Schedule - Dr. {{ doctor.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+<style>
+    .fc {
+        --fc-border-color: rgba(226, 232, 240, 0.8);
+        --fc-button-bg-color: #0284c7;
+        --fc-button-border-color: #0284c7;
+        --fc-button-hover-bg-color: #0369a1;
+        --fc-button-hover-border-color: #0369a1;
+        --fc-button-active-bg-color: #075985;
+        --fc-button-active-border-color: #075985;
+        --fc-event-bg-color: #0284c7;
+        --fc-event-border-color: #0369a1;
+        font-family: inherit;
+        font-size: 0.75rem;
+    }
+    .dark .fc {
+        --fc-border-color: rgba(39, 39, 42, 0.8);
+        --fc-page-bg-color: #18181b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Clinic Availability Management</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                Dr. {{ doctor.name }} — Practice Schedule
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+                Department: <span class="font-semibold text-slate-700 dark:text-zinc-300">{{ doctor.specialty or 'General Practice (GP)' }}</span> • FullCalendar slot manager
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('admin.manage_doctors') }}"
+               class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Back to Doctors List
+            </a>
+        </div>
+    </div>
+
+    <!-- FullCalendar Viewer -->
+    <div class="p-4 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle">
+        <div id="calendar" class="min-h-[520px]"></div>
+    </div>
+
+    <!-- Schedule Generator Form Card -->
+    <div class="p-6 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-4">
+        <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+            <i data-lucide="calendar-plus" class="w-4 h-4 text-brand-500"></i>
+            <span>Add or Auto-Generate Availability Slots</span>
+        </h2>
+
+        <form method="POST" action="{{ url_for('admin.schedule_doctor', doctor_id=doctor.id) }}" id="schedule-form" class="space-y-4">
+            
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Slot Configuration Mode</label>
+                <div class="flex items-center space-x-6 text-xs text-slate-700 dark:text-zinc-300">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="schedule_type" id="manual" value="single" checked class="text-brand-500 focus:ring-brand-500">
+                        <span>Manual (Single Slot)</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="schedule_type" id="auto" value="bulk" class="text-brand-500 focus:ring-brand-500">
+                        <span>Auto-Generate (Recurring Shift Slots)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Manual Fields -->
+            <div id="manual-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label for="start_time" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Start Time</label>
+                    <input type="datetime-local" id="start_time" name="start_time" required
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label for="end_time" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">End Time</label>
+                    <input type="datetime-local" id="end_time" name="end_time" required
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+            </div>
+
+            <!-- Auto Fields -->
+            <div id="auto-fields" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-zinc-800">
+                <div class="space-y-1">
+                    <label for="start_date" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ today }}"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label for="days" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Duration</label>
+                    <select id="days" name="days" class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                        <option value="7" selected>1 Week (7 Days)</option>
+                        <option value="14">2 Weeks (14 Days)</option>
+                        <option value="28">4 Weeks (28 Days)</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label for="slot_duration" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Slot Duration</label>
+                    <select id="slot_duration" name="slot_duration" class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                        <option value="15">15 Minutes</option>
+                        <option value="30" selected>30 Minutes (Standard Consultation)</option>
+                        <option value="60">60 Minutes</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label for="start_hour" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Clinic Start Hour</label>
+                    <input type="number" id="start_hour" name="start_hour" value="9" min="0" max="23"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label for="end_hour" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Clinic End Hour</label>
+                    <input type="number" id="end_hour" name="end_hour" value="17" min="1" max="24"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+                <div class="flex items-center space-x-2 pt-6">
+                    <input type="checkbox" id="skip_weekends" name="skip_weekends" checked class="rounded border-slate-300 text-brand-500">
+                    <label for="skip_weekends" class="text-xs text-slate-700 dark:text-zinc-300">Skip Saturdays & Sundays</label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                    Save Schedule Slots
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Existing Schedules List -->
+    <div class="space-y-3">
+        <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+            <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i>
+            <span>Active Availability Registry ({{ schedules|length }})</span>
+        </h2>
+
+        <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+            <div class="overflow-x-auto max-h-96">
+                <table class="w-full text-left text-xs" id="schedules-table">
+                    <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3">Slot Start Time</th>
+                            <th class="px-4 py-3">Slot End Time</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {% if schedules %}
+                            {% for schedule in schedules %}
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="px-4 py-3 font-mono tabular-nums text-slate-800 dark:text-zinc-200">
+                                        {{ schedule.start_time|to_utc|strftime('%d/%m/%Y %H:%M') }}
+                                    </td>
+                                    <td class="px-4 py-3 font-mono tabular-nums text-slate-600 dark:text-zinc-400">
+                                        {{ schedule.end_time|to_utc|strftime('%d/%m/%Y %H:%M') }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {% if schedule.is_available %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                                Available
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-300">
+                                                Booked
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <form action="{{ url_for('admin.delete_schedule', schedule_id=schedule.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this schedule slot?');">
+                                            <button type="submit" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 spring-action" title="Delete Slot">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-8 text-center text-slate-400">No availability slots recorded for this practitioner.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const manualFields = document.getElementById('manual-fields');
+    const autoFields = document.getElementById('auto-fields');
+    const scheduleTypeRadios = document.querySelectorAll('input[name="schedule_type"]');
+
+    function toggleFields() {
+        const isManual = document.getElementById('manual').checked;
+        manualFields.classList.toggle('hidden', !isManual);
+        autoFields.classList.toggle('hidden', isManual);
+        
+        manualFields.querySelectorAll('input').forEach(i => i.required = isManual);
+        autoFields.querySelectorAll('input, select').forEach(i => i.required = !isManual);
+    }
+
+    scheduleTypeRadios.forEach(r => r.addEventListener('change', toggleFields));
+
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        events: '/admin/get_schedules/{{ doctor.id }}',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay'
+        },
+        eventClick: function(info) {
+            if (confirm('Delete this availability slot?')) {
+                fetch(`/admin/delete_schedule/${info.event.id}`, { method: 'POST' })
+                    .then(() => calendar.refetchEvents());
+            }
+        }
+    });
+    calendar.render();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}EHR Consultation Chart #{{ appointment.id }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-base border border-brand-200/60 dark:border-brand-900/40">
+                {{ patient.name[0]|upper }}
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                        {{ patient.name }}
+                    </h1>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tabular-nums
+                        {% if appointment.status == 'completed' %} bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300
+                        {% elif appointment.status == 'cancelled' %} bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-300
+                        {% else %} bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300 {% endif %}">
+                        {{ appointment.status|capitalize }}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-zinc-400 font-mono tabular-nums mt-0.5">
+                    Appointment: {{ appointment.date|datetimeformat('%d/%m/%Y at %H:%M GMT') }} • {{ 'Telemedicine (Video Room)' if appointment.is_online else 'In-Surgery Consultation' }}
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            {% if appointment.is_online and appointment.status == 'scheduled' %}
+                <a href="{{ url_for('video.video_call', appointment_id=appointment.id) }}" class="px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-sm flex items-center space-x-1.5 spring-action">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                    <span>Launch Telemedicine</span>
+                </a>
+            {% endif %}
+            <a href="{{ url_for('chat.chats', contact_id=patient.id) }}" class="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 spring-action" title="Message Patient">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+            </a>
+            <a href="{{ url_for('doctor.dashboard') }}" class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Back to Worklist
+            </a>
+        </div>
+    </div>
+
+    <!-- Complete Encounter Form (If scheduled) -->
+    {% if appointment.status == 'scheduled' %}
+        <div class="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-4">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                <i data-lucide="stethoscope" class="w-4 h-4 text-brand-500"></i>
+                <span>Complete Clinical Encounter & Record Diagnosis</span>
+            </h2>
+
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="complete">
+
+                <div class="space-y-1">
+                    <label for="diagnosis" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Clinical Diagnosis / Assessment</label>
+                    <input type="text" id="diagnosis" name="diagnosis" required placeholder="e.g. Acute Bronchitis, Mild Seasonal Asthma"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="notes" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Attending Physician Notes & Observations</label>
+                    <textarea id="notes" name="notes" rows="4" placeholder="Document patient symptoms, clinical findings, and follow-up plan..."
+                              class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none leading-relaxed"></textarea>
+                </div>
+
+                <!-- Prescriptions Section -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Prescribe Pharmaceutical Orders</label>
+                        <button type="button" id="add-prescription" class="text-xs font-semibold text-brand-500 hover:underline flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Add Medication Line</span>
+                        </button>
+                    </div>
+
+                    <div id="prescriptions-container" class="space-y-3">
+                        <div class="prescription-entry p-3.5 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/70 dark:border-zinc-700/60 grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Medication</label>
+                                <select name="medication[]" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                                    <option value="">Select Medication...</option>
+                                    {% for med in medications %}
+                                        <option value="{{ med }}">{{ med }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Dosage</label>
+                                <input type="text" name="dosage[]" placeholder="500mg BID" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Instructions</label>
+                                <input type="text" name="instructions[]" placeholder="Take with food" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="button" class="remove-prescription px-3 py-1.5 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 hover:bg-rose-100 text-xs font-semibold">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800">
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                        Finalise & Sign Clinical Record
+                    </button>
+                </div>
+            </form>
+
+            <form method="POST" class="pt-2">
+                <input type="hidden" name="action" value="cancel">
+                <button type="submit" onclick="return confirm('Cancel this appointment?');" class="text-xs font-semibold text-rose-600 hover:underline">
+                    Cancel Scheduled Appointment
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Historical Patient Medical Records -->
+    <div class="space-y-3">
+        <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+            <i data-lucide="archive" class="w-4 h-4 text-brand-500"></i>
+            <span>Historical EHR Records for {{ patient.name }}</span>
+        </h2>
+
+        <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                        <tr>
+                            <th class="px-4 py-3">Encounter Date</th>
+                            <th class="px-4 py-3">Diagnosis</th>
+                            <th class="px-4 py-3">Doctor Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {% if medical_records %}
+                            {% for record in medical_records %}
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-zinc-800/40">
+                                    <td class="px-4 py-3 font-mono tabular-nums text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                                        {{ record.created_at|to_utc|strftime('%d/%m/%Y %H:%M') }}
+                                    </td>
+                                    <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">{{ record.diagnosis or 'Routine Assessment' }}</td>
+                                    <td class="px-4 py-3 text-slate-600 dark:text-zinc-300 leading-relaxed">{{ record.doctor_notes or 'No notes recorded.' }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-slate-400">No prior medical records on file.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('add-prescription')?.addEventListener('click', () => {
+    const container = document.getElementById('prescriptions-container');
+    const entry = document.createElement('div');
+    entry.className = 'prescription-entry p-3.5 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/70 dark:border-zinc-700/60 grid grid-cols-1 md:grid-cols-4 gap-3';
+    entry.innerHTML = `
+        <div>
+            <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Medication</label>
+            <select name="medication[]" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                <option value="">Select Medication...</option>
+                {% for med in medications %}
+                    <option value="{{ med }}">{{ med }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Dosage</label>
+            <input type="text" name="dosage[]" placeholder="500mg BID" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+        </div>
+        <div>
+            <label class="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">Instructions</label>
+            <input type="text" name="instructions[]" placeholder="Take with food" class="w-full px-2.5 py-1.5 text-xs rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+        </div>
+        <div class="flex items-end">
+            <button type="button" class="remove-prescription px-3 py-1.5 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 hover:bg-rose-100 text-xs font-semibold">
+                Remove
+            </button>
+        </div>
+    `;
+    container.appendChild(entry);
+    lucide.createIcons();
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-prescription') || e.target.closest('.remove-prescription')) {
+        e.target.closest('.prescription-entry').remove();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Schedule Consultation - Dr. {{ doctor.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6 space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex items-center space-x-3.5 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-base border border-brand-200/60 dark:border-brand-900/40">
+            {{ doctor.name[0]|upper }}
+        </div>
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Appointment Booking</span>
+            <h1 class="font-display font-bold text-xl text-slate-900 dark:text-white">
+                {{ doctor.name }}
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+                {{ doctor.specialty or 'General Practice (GP)' }} • {{ doctor.email }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Booking Form Card -->
+    <div class="p-6 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-4">
+        <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-brand-500"></i>
+            <span>Select Available Appointment Slot</span>
+        </h2>
+
+        {% if schedules %}
+            <form method="POST" action="{{ url_for('patient.book_appointment', doctor_id=doctor.id) }}" class="space-y-4">
+                
+                <div class="space-y-1">
+                    <label for="schedule_id" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Available Date & Time Slots ({{ schedules|length }} slots open)</label>
+                    <select id="schedule_id" name="schedule_id" required
+                            class="w-full px-3 py-2 text-xs font-mono tabular-nums rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        {% for schedule in schedules %}
+                            <option value="{{ schedule.id }}">
+                                {{ schedule.start_time|to_utc|strftime('%d/%m/%Y • %H:%M') }} - {{ schedule.end_time|to_utc|strftime('%H:%M') }} GMT
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Telemedicine Consultation Option -->
+                <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/60 flex items-center justify-between">
+                    <div class="space-y-0.5">
+                        <label for="is_online" class="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="video" class="w-3.5 h-3.5 text-purple-500"></i>
+                            <span>Online Telemedicine (Video Consultation)</span>
+                        </label>
+                        <p class="text-[11px] text-slate-500 dark:text-zinc-400">Join consultation via encrypted WebRTC video room</p>
+                    </div>
+                    <input type="checkbox" id="is_online" name="is_online" checked class="w-4 h-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500">
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                    <a href="{{ url_for('patient.view_doctors') }}" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm flex items-center space-x-1.5 spring-action">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Confirm Booking</span>
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="text-center py-6 space-y-2">
+                <i data-lucide="clock" class="w-8 h-8 text-slate-400 mx-auto"></i>
+                <p class="text-xs text-slate-500 dark:text-zinc-400">No open time slots currently listed for this doctor. Please check back shortly or select another practitioner.</p>
+                <a href="{{ url_for('patient.view_doctors') }}" class="inline-flex items-center space-x-1 text-xs font-semibold text-brand-500 hover:underline pt-2">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    <span>Return to Doctor Directory</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

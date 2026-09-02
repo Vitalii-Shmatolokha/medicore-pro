@@ -1,0 +1,121 @@
+# ==========================================================
+# MediCore Pro - Production-Grade .gitignore
+# Stack: Python, Flask, PostgreSQL (Supabase), Docker, WebRTC
+# ==========================================================
+
+# --- 1. Environment & Sensitive Credentials ---
+# CRITICAL: Never commit real environment variables or API keys
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+! .env.example
+
+# Private Keys & Certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+
+# --- 2. Local Database & State ---
+# SQLite local databases & instance storage
+instance/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# --- 3. Python Bytecode & Compilation Artifacts ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- 4. Virtual Environments ---
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# --- 5. Operating System Artifacts ---
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# --- 6. IDEs & Editors ---
+.vscode/
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# --- 7. Testing, Coverage & Profiling ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- 8. Application Logs & Temporary Debug Files ---
+*.log
+logs/
+*.tmp
+debug_*.html
+*.pdf
+*.tex
+*.aux
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz

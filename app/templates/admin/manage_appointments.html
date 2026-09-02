@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% block title %}Manage Clinical Consultations{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Clinical Governance</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                Consultations & Appointments Master Registry
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+                Audit attending physicians, patient consultations, encounter outcomes, clinical notes, and prescription logs.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ url_for('admin.export_appointments') }}"
+               class="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs transition-colors spring-action flex items-center space-x-1.5">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Export Audit CSV</span>
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Audit Console
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <form method="GET" action="{{ url_for('admin.manage_appointments') }}" class="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        
+        <!-- Filter by Doctor -->
+        <div class="space-y-1">
+            <label for="doctor_id" class="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400">Attending Doctor</label>
+            <select name="doctor_id" id="doctor_id" onchange="this.form.submit()"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                <option value="">All Practitioners</option>
+                {% for d in doctors %}
+                    <option value="{{ d.id }}" {% if doctor_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filter by Patient -->
+        <div class="space-y-1">
+            <label for="patient_id" class="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400">Patient</label>
+            <select name="patient_id" id="patient_id" onchange="this.form.submit()"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                <option value="">All Patients</option>
+                {% for p in patients %}
+                    <option value="{{ p.id }}" {% if patient_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filter by Status -->
+        <div class="space-y-1">
+            <label for="status" class="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400">Status</label>
+            <select name="status" id="status" onchange="this.form.submit()"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                <option value="">All Statuses</option>
+                <option value="scheduled" {% if selected_status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Filter by Channel -->
+        <div class="space-y-1">
+            <label for="is_online" class="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400">Consultation Channel</label>
+            <select name="is_online" id="is_online" onchange="this.form.submit()"
+                    class="w-full px-2.5 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                <option value="">All Channels</option>
+                <option value="1" {% if selected_is_online == '1' %}selected{% endif %}>Telemedicine (Video)</option>
+                <option value="0" {% if selected_is_online == '0' %}selected{% endif %}>In-Surgery (Clinic)</option>
+            </select>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="space-y-1">
+            <label for="table-search" class="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400">Instant Search</label>
+            <input type="text" id="table-search" placeholder="Search keywords..."
+                   class="w-full px-2.5 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+        </div>
+
+    </form>
+
+    <!-- Master Appointments Table -->
+    <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="appointments-master-table">
+                <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-4 py-3.5">ID</th>
+                        <th class="px-4 py-3.5">Doctor & Specialty</th>
+                        <th class="px-4 py-3.5">Patient</th>
+                        <th class="px-4 py-3.5">Consultation Time</th>
+                        <th class="px-4 py-3.5">Type</th>
+                        <th class="px-4 py-3.5">Status</th>
+                        <th class="px-4 py-3.5">Outcome / Clinical Record</th>
+                        <th class="px-4 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                    {% if appointments %}
+                        {% for apt in appointments %}
+                            <tr class="appointment-row hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150">
+                                <td class="px-4 py-3.5 font-mono tabular-nums text-slate-500 dark:text-zinc-400">
+                                    #{{ apt.id }}
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-6 h-6 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold text-[11px] flex items-center justify-center border border-brand-200/60 dark:border-brand-900/40">
+                                            {{ apt.doctor.name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <strong class="font-semibold text-slate-900 dark:text-white block">{{ apt.doctor.name }}</strong>
+                                            <span class="text-[10px] text-slate-400">{{ apt.doctor.specialty or 'GP' }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <div>
+                                        <a href="{{ url_for('admin.view_patient', patient_id=apt.patient.id) }}" class="font-semibold text-brand-600 dark:text-brand-400 hover:underline block">
+                                            {{ apt.patient.name }}
+                                        </a>
+                                        <span class="text-[10px] text-slate-400 font-mono">ID #{{ apt.patient.id }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5 font-mono tabular-nums text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                                    {{ apt.date|datetimeformat('%d/%m/%Y at %H:%M GMT') }}
+                                </td>
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    {% if apt.is_online %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20 dark:bg-purple-950/50 dark:text-purple-300">
+                                            <i data-lucide="video" class="w-3 h-3 mr-1"></i> Telemedicine
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300">
+                                            <i data-lucide="building-2" class="w-3 h-3 mr-1"></i> In-Surgery
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    <!-- Status Badge with inline quick changer -->
+                                    <form action="{{ url_for('admin.update_appointment_status', appointment_id=apt.id) }}" method="POST" class="inline">
+                                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                                        <select name="status" onchange="this.form.submit()"
+                                                class="px-2 py-0.5 text-[10px] font-semibold rounded-full border-0 focus:ring-1 focus:ring-brand-500 cursor-pointer
+                                                {% if apt.status == 'completed' %} bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300
+                                                {% elif apt.status == 'cancelled' %} bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-300
+                                                {% else %} bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300 {% endif %}">
+                                            <option value="scheduled" {% if apt.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                                            <option value="completed" {% if apt.status == 'completed' %}selected{% endif %}>Completed</option>
+                                            <option value="cancelled" {% if apt.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td class="px-4 py-3.5 max-w-xs">
+                                    {% if apt.medical_record %}
+                                        <div class="space-y-0.5">
+                                            <strong class="text-slate-900 dark:text-white block truncate">{{ apt.medical_record.diagnosis or 'Consultation Recorded' }}</strong>
+                                            <p class="text-[10px] text-slate-500 dark:text-zinc-400 truncate">{{ apt.medical_record.doctor_notes or 'No specific notes.' }}</p>
+                                            {% set p_count = apt.medical_record.prescriptions.count() %}
+                                            {% if p_count > 0 %}
+                                                <span class="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
+                                                    <i data-lucide="pill" class="w-3 h-3 mr-0.5"></i> {{ p_count }} Prescriptions Issued
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[11px] italic">Pending clinical assessment</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3.5 text-right whitespace-nowrap space-x-1">
+                                    <a href="{{ url_for('admin.view_appointment', appointment_id=apt.id) }}"
+                                       class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs spring-action">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>Dossier</span>
+                                    </a>
+                                    <form action="{{ url_for('admin.delete_appointment', appointment_id=apt.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete consultation #{{ apt.id }} record completely?');">
+                                        <button type="submit" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 spring-action" title="Delete Record">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="px-4 py-12 text-center text-slate-400">
+                                No consultation records found matching filter criteria.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('table-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.appointment-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

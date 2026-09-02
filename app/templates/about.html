@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}About MediCore Clinical Healthcare System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-12 py-4">
+
+    <!-- Header / Mission Card -->
+    <div class="space-y-3 pb-8 border-b border-slate-200/90 dark:border-zinc-800">
+        <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Clinical Architecture</span>
+        <h1 class="font-display font-bold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
+            Integrated Primary Care & Telemedicine Platform
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed max-w-3xl">
+            MediCore Pro is an electronic health records (EHR) and clinical consultation management system built for NHS-aligned General Practices, multidisciplinary medical teams, and outpatient clinics.
+        </p>
+    </div>
+
+    <!-- Core Operational Pillars -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-2.5">
+            <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">UK GDPR & Clinical Safety</h3>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                Role-based access control, session validation, and encrypted audit trails protect sensitive patient identifiable data.
+            </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-2.5">
+            <div class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <i data-lucide="video" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Encrypted Consultations</h3>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                Peer-to-peer WebRTC video consultations with fallback STUN signaling, real-time consultation messaging, and screen sharing.
+            </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-2.5">
+            <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 flex items-center justify-center">
+                <i data-lucide="file-check" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Electronic Prescribing</h3>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                Seamless repeat prescription ordering, GP electronic authorisation, and longitudinal BNF medication history.
+            </p>
+        </div>
+    </div>
+
+    <!-- Software Authorship Section -->
+    <div class="p-6 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Engineering & Development</span>
+            <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white">Vitalii Shmatolokha</h4>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">Full-Stack Healthcare Software Engineer</p>
+        </div>
+        <a href="{{ url_for('auth.contact') }}" class="px-4 py-2 text-xs font-semibold text-white bg-brand-500 hover:bg-brand-600 rounded-lg shadow-sm spring-action">
+            Contact Secretariat
+        </a>
+    </div>
+
+</div>
+{% endblock %}

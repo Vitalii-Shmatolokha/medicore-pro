@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Manage Schedule</h2>
+
+<h3>Add Single Slot</h3>
+<form method="POST">
+    <input type="hidden" name="schedule_type" value="single">
+    <div>
+        <label>Day of Week:</label>
+        <select name="day_of_week" required>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+        </select>
+    </div>
+    <div>
+        <label>Start Time:</label>
+        <input type="time" name="start_time" required>
+    </div>
+    <div>
+        <label>End Time:</label>
+        <input type="time" name="end_time" required>
+    </div>
+    <button type="submit">Add Slot</button>
+</form>
+
+<h3>Add Bulk Slots</h3>
+<form method="POST">
+    <input type="hidden" name="schedule_type" value="bulk">
+    <div>
+        <label>Start Date:</label>
+        <input type="date" name="start_date" value="{{ today }}" required>
+    </div>
+    <div>
+        <label>Days:</label>
+        <input type="number" name="days" value="7" min="1" max="30" required>
+    </div>
+    <div>
+        <label>Start Hour:</label>
+        <input type="number" name="start_hour" value="9" min="0" max="23" required>
+    </div>
+    <div>
+        <label>End Hour:</label>
+        <input type="number" name="end_hour" value="17" min="1" max="24" required>
+    </div>
+    <div>
+        <label>Slot Duration (minutes):</label>
+        <select name="slot_duration">
+            <option value="15">15</option>
+            <option value="30" selected>30</option>
+            <option value="60">60</option>
+        </select>
+    </div>
+    <button type="submit">Generate Slots</button>
+</form>
+
+<h3>Current Schedules</h3>
+<ul>
+{% for schedule in schedules %}
+    <li>
+        {{ schedule.day_of_week }} {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+        <form action="{{ url_for('delete_doctor_schedule', schedule_id=schedule.id) }}" method="POST" style="display:inline;">
+            <button type="submit">Delete</button>
+        </form>
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}

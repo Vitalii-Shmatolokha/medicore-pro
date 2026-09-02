@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Patient Record - {{ patient.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div class="space-y-1">
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Administration EHR Audit</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                {{ patient.name }}
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 font-mono tabular-nums">
+                Patient Record ID: #{{ patient.id }} • {{ patient.email }}
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ url_for('admin.export_medical_records', patient_id=patient.id) }}"
+               class="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs transition-colors spring-action flex items-center space-x-1.5">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Export Medical Records</span>
+            </a>
+            <a href="{{ url_for('admin.edit_patient', patient_id=patient.id) }}"
+               class="px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action flex items-center space-x-1.5">
+                <i data-lucide="edit" class="w-4 h-4"></i>
+                <span>Edit Patient</span>
+            </a>
+            <a href="{{ url_for('admin.manage_patients') }}"
+               class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Back to Register
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Demographics & Profile Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-1">
+            <span class="text-[11px] font-medium text-slate-400 block">Date of Birth</span>
+            <span class="text-xs font-semibold text-slate-900 dark:text-white tabular-nums">
+                {{ patient.date_of_birth.strftime('%d/%m/%Y') if patient.date_of_birth else 'Not recorded' }}
+            </span>
+        </div>
+        <div class="p-4 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-1">
+            <span class="text-[11px] font-medium text-slate-400 block">Documented Allergies</span>
+            <span class="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                {{ patient.allergies or 'No documented allergies (NKDA)' }}
+            </span>
+        </div>
+        <div class="p-4 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-1">
+            <span class="text-[11px] font-medium text-slate-400 block">Assigned Practice GP</span>
+            <span class="text-xs font-semibold text-slate-900 dark:text-white">
+                {{ patient.family_doctor.name if patient.family_doctor else 'Unassigned (General Pool)' }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Longitudinal Clinical Encounters & Diagnoses -->
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-brand-500"></i>
+                <span>Medical Encounters & Clinical Notes</span>
+            </h2>
+        </div>
+
+        <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                        <tr>
+                            <th class="px-4 py-3">Encounter Date</th>
+                            <th class="px-4 py-3">Diagnosis</th>
+                            <th class="px-4 py-3">Attending Physician Notes</th>
+                            <th class="px-4 py-3">Prescriptions Issued</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {% if medical_records %}
+                            {% for record in medical_records %}
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="px-4 py-3.5 font-mono tabular-nums text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                                        {{ record.created_at|to_utc|strftime('%d/%m/%Y %H:%M') }}
+                                    </td>
+                                    <td class="px-4 py-3.5 font-semibold text-slate-900 dark:text-white">
+                                        {{ record.diagnosis or 'Routine Assessment' }}
+                                    </td>
+                                    <td class="px-4 py-3.5 text-slate-600 dark:text-zinc-300 leading-relaxed">
+                                        {{ record.doctor_notes or 'No specific notes recorded.' }}
+                                    </td>
+                                    <td class="px-4 py-3.5">
+                                        {% if record.prescriptions %}
+                                            <ul class="space-y-1">
+                                                {% for p in record.prescriptions %}
+                                                    <li class="text-[11px]">
+                                                        <strong class="text-slate-900 dark:text-white">{{ p.medication_name }}</strong>
+                                                        <span class="text-slate-500 tabular-nums">({{ p.dosage }})</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-slate-400 text-[11px]">None</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-6 text-center text-slate-400">No medical records documented for this patient.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment History Table -->
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                <i data-lucide="calendar" class="w-4 h-4 text-purple-600"></i>
+                <span>Appointment Audit History</span>
+            </h2>
+            <a href="{{ url_for('admin.export_patient_appointments', patient_id=patient.id) }}"
+               class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center space-x-1">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Export Visits CSV</span>
+            </a>
+        </div>
+
+        <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                        <tr>
+                            <th class="px-4 py-3">Doctor</th>
+                            <th class="px-4 py-3">Scheduled Date & Time</th>
+                            <th class="px-4 py-3">Type</th>
+                            <th class="px-4 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                        {% if appointments %}
+                            {% for apt in appointments %}
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                                    <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">{{ apt.doctor.name }}</td>
+                                    <td class="px-4 py-3 font-mono tabular-nums text-slate-600 dark:text-zinc-400">
+                                        {{ apt.date|datetimeformat('%d/%m/%Y at %H:%M GMT') }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tabular-nums
+                                            {% if apt.is_online %}
+                                                bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20 dark:bg-purple-950/50 dark:text-purple-300
+                                            {% else %}
+                                                bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300
+                                            {% endif %}">
+                                            {{ 'Telemedicine (Video)' if apt.is_online else 'In-Surgery' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tabular-nums
+                                            {% if apt.status == 'completed' %} bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300
+                                            {% elif apt.status == 'cancelled' %} bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-300
+                                            {% else %} bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300 {% endif %}">
+                                            {{ apt.status|capitalize }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-6 text-center text-slate-400">No appointments recorded for this patient.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

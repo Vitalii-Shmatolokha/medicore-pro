@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Consultation Dossier #{{ appointment.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-6 space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Consultation Audit Dossier</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                Encounter #{{ appointment.id }}
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 font-mono tabular-nums">
+                {{ appointment.date|datetimeformat('%d/%m/%Y at %H:%M GMT') }} • {{ 'Telemedicine (Video Room)' if appointment.is_online else 'In-Surgery Consultation' }}
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('admin.manage_appointments') }}"
+               class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Back to Registry
+            </a>
+        </div>
+    </div>
+
+    <!-- Overview Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Doctor Card -->
+        <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Attending Doctor</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300">
+                    {{ appointment.doctor.specialty or 'GP' }}
+                </span>
+            </div>
+            <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">{{ appointment.doctor.name }}</h3>
+            <p class="text-xs font-mono text-slate-500 dark:text-zinc-400">{{ appointment.doctor.email }}</p>
+        </div>
+
+        <!-- Patient Card -->
+        <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Enrolled Patient</span>
+                <a href="{{ url_for('admin.view_patient', patient_id=appointment.patient.id) }}" class="text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                    View Full EHR &rarr;
+                </a>
+            </div>
+            <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">{{ appointment.patient.name }}</h3>
+            <p class="text-xs font-mono text-slate-500 dark:text-zinc-400">{{ appointment.patient.email }}</p>
+            {% if appointment.patient.allergies %}
+                <p class="text-[11px] text-rose-600 dark:text-rose-400 font-medium">Allergies: {{ appointment.patient.allergies }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Modification Card -->
+    <div class="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-0.5">
+            <span class="text-xs font-semibold text-slate-900 dark:text-white block">Consultation Workflow Status</span>
+            <p class="text-[11px] text-slate-500 dark:text-zinc-400">Current status is marked as <strong class="capitalize">{{ appointment.status }}</strong></p>
+        </div>
+
+        <form action="{{ url_for('admin.update_appointment_status', appointment_id=appointment.id) }}" method="POST" class="flex items-center space-x-2">
+            <input type="hidden" name="next" value="{{ url_for('admin.view_appointment', appointment_id=appointment.id) }}">
+            <select name="status" class="px-3 py-1.5 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white font-medium">
+                <option value="scheduled" {% if appointment.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                <option value="completed" {% if appointment.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if appointment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+            <button type="submit" class="px-3.5 py-1.5 rounded-md bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                Update Status
+            </button>
+        </form>
+    </div>
+
+    <!-- Clinical Outcome & Notes -->
+    <div class="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-brand-500"></i>
+                <span>Encounter Outcome & Medical Documentation</span>
+            </h2>
+            {% if appointment.medical_record %}
+                <span class="text-[11px] font-mono tabular-nums text-slate-400">Logged on {{ appointment.medical_record.created_at|datetimeformat('%d/%m/%Y %H:%M') }}</span>
+            {% endif %}
+        </div>
+
+        {% if appointment.medical_record %}
+            <div class="space-y-3 text-xs">
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 block">Primary Diagnosis</span>
+                    <p class="font-semibold text-slate-900 dark:text-white text-sm mt-0.5">{{ appointment.medical_record.diagnosis or 'Routine Assessment' }}</p>
+                </div>
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 block">Attending Physician Notes</span>
+                    <p class="text-slate-700 dark:text-zinc-300 leading-relaxed mt-0.5">{{ appointment.medical_record.doctor_notes or 'No clinical notes attached.' }}</p>
+                </div>
+
+                {% set prescriptions_list = appointment.medical_record.prescriptions.all() %}
+                {% if prescriptions_list %}
+                    <div class="pt-3 border-t border-slate-100 dark:border-zinc-800 space-y-2">
+                        <span class="text-[11px] font-semibold text-slate-400 block">Prescriptions Authorized During Consultation</span>
+                        <div class="space-y-1.5">
+                            {% for p in prescriptions_list %}
+                                <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/60 flex items-center justify-between">
+                                    <div>
+                                        <strong class="text-slate-900 dark:text-white block">{{ p.medication_name }}</strong>
+                                        <span class="text-slate-500 text-[11px]">{{ p.instructions }}</span>
+                                    </div>
+                                    <span class="font-mono tabular-nums font-semibold text-brand-600 dark:text-brand-400 text-xs">{{ p.dosage }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-center py-6 text-slate-400 text-xs space-y-1">
+                <i data-lucide="clipboard-pen" class="w-6 h-6 mx-auto text-slate-300 dark:text-zinc-600"></i>
+                <p>No clinical assessment or medical record has been logged for this encounter yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

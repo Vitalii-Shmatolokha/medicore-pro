@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Patient Account Registration{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-12 space-y-6">
+    
+    <div class="space-y-1 text-center">
+        <h1 class="font-display font-bold text-xl text-slate-900 dark:text-white">
+            Patient Portal Registration
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">
+            Create an electronic health record profile to book consultations and manage prescriptions
+        </p>
+    </div>
+
+    <!-- Registration Form -->
+    <form method="POST" id="register-form" novalidate class="space-y-4 border border-slate-200 dark:border-zinc-800 rounded-lg p-6 bg-white dark:bg-zinc-900 shadow-sm">
+        
+        <div class="space-y-1">
+            <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Full Name</label>
+            <input type="text" id="name" name="name" value="{{ form_data.name | default('') }}" required placeholder="Jane Smith"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <p id="name-error" class="hidden text-[10px] text-rose-600 mt-0.5">Please provide a valid full name (2-100 characters).</p>
+        </div>
+
+        <div class="space-y-1">
+            <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Email Address</label>
+            <input type="email" id="email" name="email" value="{{ form_data.email | default('') }}" required placeholder="jane.smith@example.com"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <p id="email-error" class="hidden text-[10px] text-rose-600 mt-0.5">Please enter a valid email format.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+                <label for="password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••"
+                       class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <p id="password-error" class="hidden text-[10px] text-rose-600 mt-0.5">Min. 6 characters.</p>
+            </div>
+
+            <div class="space-y-1">
+                <label for="confirm_password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••••"
+                       class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <p id="confirm-error" class="hidden text-[10px] text-rose-600 mt-0.5">Passwords must match.</p>
+            </div>
+        </div>
+
+        <div class="flex items-start space-x-2 pt-1">
+            <input type="checkbox" id="terms" name="terms" required class="mt-0.5 rounded border-slate-300 text-brand-500 focus:ring-brand-500">
+            <label for="terms" class="text-[11px] text-slate-600 dark:text-zinc-400 leading-tight">
+                I agree to the <a href="{{ url_for('auth.terms') }}" target="_blank" class="text-brand-500 hover:underline font-medium">Terms of Service</a> and <a href="{{ url_for('auth.privacy') }}" target="_blank" class="text-brand-500 hover:underline font-medium">HIPAA Privacy Policy</a>.
+            </label>
+        </div>
+        <p id="terms-error" class="hidden text-[10px] text-rose-600">Agreement to terms is required.</p>
+
+        <button type="submit" class="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs spring-action">
+            Complete Registration
+        </button>
+    </form>
+
+    <div class="text-center text-xs text-slate-500 dark:text-zinc-400">
+        Already registered? 
+        <a href="{{ url_for('auth.login') }}" class="font-semibold text-brand-500 hover:underline ml-1">
+            Sign in
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('register-form');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirm_password');
+    const termsInput = document.getElementById('terms');
+
+    function checkName() {
+        const val = nameInput.value.trim();
+        const valid = val.length >= 2 && val.length <= 100 && /^[A-Za-z\s\.\-]+$/.test(val);
+        document.getElementById('name-error').classList.toggle('hidden', valid);
+        return valid;
+    }
+
+    function checkEmail() {
+        const val = emailInput.value.trim();
+        const valid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val);
+        document.getElementById('email-error').classList.toggle('hidden', valid);
+        return valid;
+    }
+
+    function checkPassword() {
+        const valid = passwordInput.value.length >= 6;
+        document.getElementById('password-error').classList.toggle('hidden', valid);
+        return valid;
+    }
+
+    function checkConfirm() {
+        const valid = confirmInput.value === passwordInput.value && confirmInput.value !== '';
+        document.getElementById('confirm-error').classList.toggle('hidden', valid);
+        return valid;
+    }
+
+    function checkTerms() {
+        const valid = termsInput.checked;
+        document.getElementById('terms-error').classList.toggle('hidden', valid);
+        return valid;
+    }
+
+    nameInput.addEventListener('input', checkName);
+    emailInput.addEventListener('input', checkEmail);
+    passwordInput.addEventListener('input', checkPassword);
+    confirmInput.addEventListener('input', checkConfirm);
+    termsInput.addEventListener('change', checkTerms);
+
+    form.addEventListener('submit', (e) => {
+        const valid = checkName() && checkEmail() && checkPassword() && checkConfirm() && checkTerms();
+        if (!valid) e.preventDefault();
+    });
+});
+</script>
+{% endblock %}

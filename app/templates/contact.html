@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Clinical Support & Enquiries Centre{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 py-4">
+
+    <!-- Header Section -->
+    <div class="space-y-1.5 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Support Desk</span>
+        <h1 class="font-display font-bold text-2xl sm:text-3xl text-slate-900 dark:text-white">
+            Clinical Enquiries & Technical Support
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">
+            For assistance with patient records, GP appointments, or electronic prescription routing.
+        </p>
+    </div>
+
+    <!-- Contact Form & Info Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        
+        <!-- Form -->
+        <div class="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-4">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white">Send an Enquiry</h2>
+            
+            <form action="{{ url_for('auth.contact') }}" method="POST" class="space-y-3.5">
+                <div class="space-y-1">
+                    <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Full Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Dr. / Mr. / Ms. Full Name"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none focus-visible:ring-2">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="contact@example.co.uk"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none focus-visible:ring-2">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="message" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Enquiry Details</label>
+                    <textarea id="message" name="message" rows="4" required placeholder="Describe your query or request..."
+                              class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none focus-visible:ring-2"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action flex items-center justify-center space-x-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500">
+                    <span>Submit Enquiry</span>
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- UK Clinical Contact Info Card -->
+        <div class="space-y-6">
+            <div class="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-subtle space-y-4">
+                <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white">UK Clinical Secretariat</h2>
+                
+                <div class="space-y-3.5 text-xs">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-slate-900 dark:text-white block">Email Support</span>
+                            <a href="mailto:support@healthcare.co.uk" class="text-brand-600 dark:text-brand-400 hover:underline">support@healthcare.co.uk</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-slate-900 dark:text-white block">Telephone Enquiries</span>
+                            <span class="text-slate-600 dark:text-zinc-400 font-mono tabular-nums">+44 20 7946 0912</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-slate-900 dark:text-white block">Registered Practice Address</span>
+                            <span class="text-slate-600 dark:text-zinc-400">124 St Mary's Road, London, EC1A 1BB, United Kingdom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Urgent Medical Advisory -->
+            <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-start space-x-3">
+                <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                <div class="space-y-0.5 leading-relaxed">
+                    <strong class="font-semibold block">Emergency Notice:</strong>
+                    <span>If you are experiencing acute chest pain, severe breathlessness, or suspected stroke, call <strong>999</strong> immediately or attend your nearest Accident & Emergency (A&E) department.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

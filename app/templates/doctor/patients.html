@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Patient Directory & Register{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Clinical Roster</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                Assigned Patient Directory
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+                Review electronic medical records, allergy profiles, and consultation histories for assigned patients.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <a href="{{ url_for('doctor.dashboard') }}" class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500">
+                Back to Worklist
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="relative flex-1 max-w-sm">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="patient-search" placeholder="Search by patient name, email or NHS ID..."
+                   class="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-subtle">
+        </div>
+        <span class="text-xs font-mono tabular-nums text-slate-500 dark:text-zinc-400">{{ patients|length }} Registered Patients</span>
+    </div>
+
+    <!-- Patients List Table -->
+    <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="patients-table">
+                <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-4 py-3.5">Patient Name</th>
+                        <th class="px-4 py-3.5">Email Address</th>
+                        <th class="px-4 py-3.5">Date of Birth</th>
+                        <th class="px-4 py-3.5">Documented Allergies</th>
+                        <th class="px-4 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                    {% if patients %}
+                        {% for patient in patients %}
+                            <tr class="patient-row hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150">
+                                <td class="px-4 py-3.5">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div class="w-7 h-7 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold text-xs flex items-center justify-center border border-brand-200/60 dark:border-brand-900/40">
+                                            {{ patient.name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <strong class="font-semibold text-slate-900 dark:text-white block">{{ patient.name }}</strong>
+                                            <span class="text-[10px] font-mono tabular-nums text-slate-400">ID #{{ patient.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5 text-slate-600 dark:text-zinc-300 font-mono">{{ patient.email }}</td>
+                                <td class="px-4 py-3.5 text-slate-600 dark:text-zinc-400 tabular-nums">
+                                    {{ patient.date_of_birth.strftime('%d/%m/%Y') if patient.date_of_birth else 'Not specified' }}
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    {% if patient.allergies %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-300">
+                                            {{ patient.allergies }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[11px]">Nil known</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3.5 text-right space-x-1.5">
+                                    <a href="{{ url_for('doctor.view_patient', patient_id=patient.id) }}"
+                                       class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs transition-colors spring-action focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                        <span>EHR History</span>
+                                    </a>
+                                    <a href="{{ url_for('chat.chats', contact_id=patient.id) }}"
+                                       class="inline-flex items-center p-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors spring-action focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500" title="Message Patient">
+                                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients assigned to practice register.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('patient-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.patient-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

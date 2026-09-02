@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Enterprise Clinical & Telehealth Workflow Platform{% endblock %}
+
+{% block content %}
+<div class="space-y-20 py-8">
+
+    <!-- Hero Section: Clean, restrained clinical hierarchy -->
+    <section class="max-w-4xl mx-auto text-center space-y-6">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Primary Care Consultation & Telemedicine Platform</span>
+        </div>
+
+        <h1 class="font-display font-extrabold text-3xl sm:text-5xl lg:text-6xl text-slate-900 dark:text-white tracking-tight leading-tight">
+            Standardize Patient Encounters, Telehealth, and Prescriptions.
+        </h1>
+
+        <p class="text-sm sm:text-base text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+            Eliminate documentation latency with automated doctor scheduling, WebRTC-encrypted clinical video rooms, and structured electronic health records.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.login') }}" class="px-5 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                    Sign In to Portal
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="px-5 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 font-semibold text-xs spring-action">
+                    Register as Patient
+                </a>
+            {% else %}
+                <a href="{% if current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.role == 'doctor' %}{{ url_for('doctor.dashboard') }}{% else %}{{ url_for('patient.dashboard') }}{% endif %}" class="px-5 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                    Open {{ current_user.role|capitalize }} Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Structured Operational Workflows: Semantic grid without Card Hell -->
+    <section class="max-w-6xl mx-auto border-t border-slate-200 dark:border-zinc-800 pt-16 space-y-12">
+        <div class="max-w-xl space-y-2">
+            <h2 class="font-display font-bold text-2xl text-slate-900 dark:text-white">Core Clinical Capabilities</h2>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">Integrated clinical toolsets designed for hospital departments and outpatient practices.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Workflow 1 -->
+            <div class="space-y-3">
+                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-800 dark:text-zinc-200">
+                    <i data-lucide="video" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Direct WebRTC Telemedicine</h3>
+                <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                    Peer-to-peer audio/video consultations with fallback STUN signaling, real-time in-call clinical messaging, and screen sharing.
+                </p>
+            </div>
+
+            <!-- Workflow 2 -->
+            <div class="space-y-3">
+                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-800 dark:text-zinc-200">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Structured Health Records</h3>
+                <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                    Standardized encounter notes, diagnostic categorization, and longitudinal prescription history with relational integrity.
+                </p>
+            </div>
+
+            <!-- Workflow 3 -->
+            <div class="space-y-3">
+                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-800 dark:text-zinc-200">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Automated Slot Scheduling</h3>
+                <p class="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                    Conflict-free physician schedule generation, patient self-booking, and status tracking for in-person or remote visits.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Infrastructure & Compliance Row -->
+    <section class="max-w-6xl mx-auto border-t border-slate-200 dark:border-zinc-800 pt-12 pb-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-slate-600 dark:text-zinc-400">
+        <div class="flex items-start space-x-3">
+            <i data-lucide="shield" class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <strong class="font-semibold text-slate-800 dark:text-zinc-200 block">Encrypted Transport</strong>
+                <span>DTLS/SRTP WebRTC protocols and HTTPS TLS session termination.</span>
+            </div>
+        </div>
+        <div class="flex items-start space-x-3">
+            <i data-lucide="database" class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <strong class="font-semibold text-slate-800 dark:text-zinc-200 block">PostgreSQL Core</strong>
+                <span>ACID-compliant storage engine with connection pooling and indexing.</span>
+            </div>
+        </div>
+        <div class="flex items-start space-x-3">
+            <i data-lucide="activity" class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <strong class="font-semibold text-slate-800 dark:text-zinc-200 block">Low-Latency Signaling</strong>
+                <span>Asynchronous Eventlet WebSocket server for immediate clinical chat and call events.</span>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

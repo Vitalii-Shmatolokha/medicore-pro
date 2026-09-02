@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Electronic Health Records & Clinical History{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-sm">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Electronic Health Records</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white mt-1">
+                Medical Records & Diagnosis History
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                Longitudinal summary of medical encounters, physician observations, and treatment outcomes.
+            </p>
+        </div>
+    </div>
+
+    <!-- Records Timeline / Table Card -->
+    <div class="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-sm space-y-4">
+        <h2 class="font-display font-bold text-base text-slate-900 dark:text-white flex items-center space-x-2">
+            <i data-lucide="file-text" class="w-4 h-4 text-brand-600"></i>
+            <span>Clinical Encounter History</span>
+        </h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-semibold border-y border-slate-200/80 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-4 py-3">Encounter Date</th>
+                        <th class="px-4 py-3">Physician</th>
+                        <th class="px-4 py-3">Diagnosis</th>
+                        <th class="px-4 py-3">Clinical Notes</th>
+                        <th class="px-4 py-3">Type</th>
+                        <th class="px-4 py-3">Associated Rx</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                    {% if medical_records %}
+                        {% for record in medical_records %}
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                                <td class="px-4 py-3.5 font-mono text-slate-500 dark:text-zinc-400">
+                                    {{ record.created_at.strftime('%b %d, %Y %H:%M') }}
+                                </td>
+                                <td class="px-4 py-3.5 font-semibold text-slate-900 dark:text-white">
+                                    {{ record.appointment.doctor.name if record.appointment and record.appointment.doctor else 'Attending Physician' }}
+                                </td>
+                                <td class="px-4 py-3.5 font-medium text-slate-800 dark:text-zinc-200">
+                                    <span class="px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-semibold text-[11px] inline-block">
+                                        {{ record.diagnosis or 'Routine Examination' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3.5 text-slate-600 dark:text-zinc-400 max-w-sm leading-relaxed">
+                                    {{ record.doctor_notes or 'No specific notes recorded.' }}
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300' if record.appointment and record.appointment.is_online else 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                                        {{ 'Telemedicine' if record.appointment and record.appointment.is_online else 'In-Clinic' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    {% if record.prescriptions %}
+                                        <div class="space-y-1">
+                                            {% for rx in record.prescriptions %}
+                                                <div class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+                                                    <i data-lucide="pill" class="w-3 h-3"></i>
+                                                    <span>{{ rx.medication_name }}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[11px]">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-400">No clinical medical records archived.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

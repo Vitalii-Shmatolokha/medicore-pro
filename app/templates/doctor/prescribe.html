@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Prescribe Medication{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Prescribe Medication for {{ patient.name }}</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('doctor.prescribe_medication', patient_id=patient.id) }}">
+        <div class="mb-3">
+            <label for="medication" class="form-label">Medication</label>
+            <input type="text" class="form-control" id="medication" name="medication" required>
+        </div>
+        <div class="mb-3">
+            <label for="dosage" class="form-label">Dosage</label>
+            <input type="text" class="form-control" id="dosage" name="dosage" required>
+        </div>
+        <div class="mb-3">
+            <label for="instructions" class="form-label">Instructions</label>
+            <textarea class="form-control" id="instructions" name="instructions" rows="4" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="medical_record_id" class="form-label">Associated Medical Record (Optional)</label>
+            <select class="form-select" id="medical_record_id" name="medical_record_id">
+                <option value="">None</option>
+                {% for record in medical_records %}
+                    <option value="{{ record.id }}">{{ record.created_at|to_utc|strftime('%Y-%m-%d') }} - {{ record.diagnosis or 'No Diagnosis' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Prescribe</button>
+    </form>
+</div>
+{% endblock %}

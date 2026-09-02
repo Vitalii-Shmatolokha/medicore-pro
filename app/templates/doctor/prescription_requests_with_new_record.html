@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Prescription Requests - Healthcare Management System{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="h2 mb-4">Prescription Requests</h1>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Pending Requests</h6>
+        </div>
+        <div class="card-body">
+            {% if requests %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Medication</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in requests %}
+                                <tr>
+                                    <td>{{ patients[request.patient_id].name }}</td>
+                                    <td>{{ request.medication_name }}</td>
+                                    <td>{{ request.reason }}</td>
+                                    <td>{{ request.status }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('doctor.prescription_requests') }}">
+                                            <input type="hidden" name="request_id" value="{{ request.id }}">
+                                            <div class="mb-3">
+                                                <label for="medical_record_id_{{ request.id }}" class="form-label">Medical Record (Optional)</label>
+                                                <select class="form-select" id="medical_record_id_{{ request.id }}" name="medical_record_id">
+                                                    <option value="">None</option>
+                                                    {% for record in medical_records if record.patient_id == request.patient_id %}
+                                                        <option value="{{ record.id }}">{{ record.created_at|to_utc|strftime('%Y-%m-%d') }} - {{ record.diagnosis or 'No Diagnosis' }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="new_diagnosis_{{ request.id }}" class="form-label">New Diagnosis (Optional)</label>
+                                                <input type="text" class="form-control" id="new_diagnosis_{{ request.id }}" name="new_diagnosis" placeholder="Enter diagnosis if creating new record">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="new_treatment_{{ request.id }}" class="form-label">New Treatment Notes (Optional)</label>
+                                                <textarea class="form-control" id="new_treatment_{{ request.id }}" name="new_treatment"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="dosage_{{ request.id }}" class="form-label">Dosage *</label>
+                                                <input type="text" class="form-control" id="dosage_{{ request.id }}" name="dosage" placeholder="e.g., 500 mg every 8 hours" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="instructions_{{ request.id }}" class="form-label">Instructions *</label>
+                                                <textarea class="form-control" id="instructions_{{ request.id }}" name="instructions" required></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="duration_{{ request.id }}" class="form-label">Duration</label>
+                                                <input type="text" class="form-control" id="duration_{{ request.id }}" name="duration" placeholder="e.g., 7 days">
+                                            </div>
+                                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-center">No pending prescription requests.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

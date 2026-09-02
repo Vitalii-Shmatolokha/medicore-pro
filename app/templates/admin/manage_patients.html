@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Manage Patients & Electronic Health Records{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Administration</span>
+            <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+                Manage Practice Patients
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-zinc-400">
+                Register new patient profiles, review longitudinal health records, and maintain demographic data.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button onclick="document.getElementById('add-patient-modal').classList.remove('hidden')"
+                    class="px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action flex items-center space-x-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-500">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Register New Patient</span>
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-semibold text-xs shadow-subtle hover:bg-slate-50 dark:hover:bg-zinc-700/50 transition-colors spring-action">
+                Audit Console
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Table Controls -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="relative flex-1 max-w-sm">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="patient-search" placeholder="Search patient by name, email or ID..."
+                   class="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-subtle">
+        </div>
+        <span class="text-xs font-mono tabular-nums text-slate-500 dark:text-zinc-400">{{ patients|length }} Patients Registered</span>
+    </div>
+
+    <!-- Patients Table -->
+    <div class="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="patients-table">
+                <thead class="bg-slate-50 dark:bg-zinc-800/60 text-slate-600 dark:text-zinc-300 font-semibold border-b border-slate-200/90 dark:border-zinc-800">
+                    <tr>
+                        <th class="px-4 py-3.5">Patient Name</th>
+                        <th class="px-4 py-3.5">Email Address</th>
+                        <th class="px-4 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-zinc-800">
+                    {% if patients %}
+                        {% for patient in patients %}
+                            <tr class="patient-row hover:bg-slate-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150">
+                                <td class="px-4 py-3.5">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div class="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center border border-emerald-200/60 dark:border-emerald-900/40">
+                                            {{ patient.name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <strong class="font-semibold text-slate-900 dark:text-white block">{{ patient.name }}</strong>
+                                            <span class="text-[10px] font-mono tabular-nums text-slate-400">ID #{{ patient.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5 text-slate-600 dark:text-zinc-300 font-mono">{{ patient.email }}</td>
+                                <td class="px-4 py-3.5 text-right space-x-1">
+                                    <a href="{{ url_for('admin.view_patient', patient_id=patient.id) }}"
+                                       class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs spring-action">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                        <span>View EHR</span>
+                                    </a>
+                                    <a href="{{ url_for('admin.edit_patient', patient_id=patient.id) }}"
+                                       class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 font-semibold text-xs spring-action">
+                                        <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                        <span>Edit</span>
+                                    </a>
+                                    <form action="{{ url_for('admin.delete_patient', patient_id=patient.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete patient {{ patient.name }}?');">
+                                        <button type="submit" class="inline-flex items-center p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 spring-action" title="Delete Patient">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="px-4 py-8 text-center text-slate-400">No patients registered.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Patient Modal -->
+    <div id="add-patient-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200/90 dark:border-zinc-800">
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white">Register New Patient Profile</h3>
+                <button type="button" onclick="document.getElementById('add-patient-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin.manage_patients') }}" class="space-y-3.5">
+                <div class="space-y-1">
+                    <label for="p_name" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Full Patient Name</label>
+                    <input type="text" id="p_name" name="name" required placeholder="Firstname Lastname"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="p_email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Email Address</label>
+                    <input type="email" id="p_email" name="email" required placeholder="patient@example.co.uk"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="p_password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Temporary Password</label>
+                    <input type="password" id="p_password" name="password" required placeholder="••••••••"
+                           class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                    <button type="button" onclick="document.getElementById('add-patient-modal').classList.add('hidden')"
+                            class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                        Register Patient
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('patient-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.patient-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

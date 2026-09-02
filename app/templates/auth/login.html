@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="max-w-sm mx-auto py-12 space-y-6">
+    
+    <div class="space-y-1 text-center">
+        <h1 class="font-display font-bold text-xl text-slate-900 dark:text-white">
+            Clinical Portal Sign In
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">
+            Enter authorized practitioner or patient credentials
+        </p>
+    </div>
+
+    <!-- Login Form -->
+    <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4 border border-slate-200 dark:border-zinc-800 rounded-lg p-6 bg-white dark:bg-zinc-900 shadow-sm">
+        <div class="space-y-1">
+            <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Email Address</label>
+            <input type="email" id="email" name="email" required autocomplete="email" placeholder="name@institution.com"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+        </div>
+
+        <div class="space-y-1">
+            <label for="password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500">
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-md bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs spring-action">
+            Sign In
+        </button>
+    </form>
+
+    <!-- Pre-configured Test Accounts Reference -->
+    <div class="p-3 rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-[11px] text-slate-600 dark:text-zinc-400 space-y-1">
+        <span class="font-semibold text-slate-700 dark:text-zinc-300 block">Default Development Accounts:</span>
+        <div class="font-mono text-[10px] space-y-0.5">
+            <div>General Practitioner: <span class="text-slate-800 dark:text-zinc-200">doctor@healthcare.co.uk</span> / doctor123</div>
+            <div>Patient (Vitalii): <span class="text-slate-800 dark:text-zinc-200">patient@healthcare.co.uk</span> / patient123</div>
+            <div>Administrator: <span class="text-slate-800 dark:text-zinc-200">admin@healthcare.co.uk</span> / admin123</div>
+        </div>
+    </div>
+
+    <div class="text-center text-xs text-slate-500 dark:text-zinc-400">
+        New patient? 
+        <a href="{{ url_for('auth.register') }}" class="font-semibold text-brand-500 hover:underline ml-1">
+            Register an account
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Discharge Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2cm;
+            font-size: 12pt;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 100px;
+            height: auto;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            text-align: center;
+            font-size: 14pt;
+            margin-bottom: 10px;
+        }
+        .section p {
+            margin: 5px 0;
+        }
+        .signature {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Discharge Summary</h1>
+        <p>Healthcare System</p>
+        <p>123 Health St, Medical City, MC 12345</p>
+        <p>Phone: (123) 456-7890 | Email: info@healthcare.com</p>
+        <p>Verification ID: {{ prescription_id }}</p>
+        <img src="file://{{ logo_path }}" alt="Hospital Logo">
+
+        <p><em>(Official Discharge Document - Healthcare System)</em></p>
+    </div>
+
+    <div class="section">
+        <p><strong>Patient:</strong> {{ patient_name }}</p>
+        <p><strong>Email:</strong> {{ patient_email }}</p>
+        <p><strong>Doctor:</strong> {{ doctor_name }}</p>
+        <p><strong>Specialty:</strong> {{ doctor_specialty }}</p>
+        <p><strong>Discharge Date:</strong> {{ discharge_date }}</p>
+        <p><strong>Diagnosis:</strong> {{ diagnosis }}</p>
+        <p><strong>Issue Date:</strong> {{ issue_date }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Treatment and Prescription Details</h2>
+        <p><strong>Medication:</strong> {{ medication_name }}</p>
+        <p><strong>Dosage:</strong> {{ dosage }}</p>
+        <p><strong>Instructions:</strong> {{ instructions }}</p>
+    </div>
+
+    <div class="section">
+        <p><strong>Discharge Statement:</strong></p>
+        <p>The patient, {{ patient_name }}, was discharged on {{ discharge_date }} following treatment for {{ diagnosis }}. The above prescription is provided for continued care.</p>
+    </div>
+
+    <div class="signature">
+        <p><strong>Doctor's Signature:</strong> Dr. {{ doctor_name }}</p>
+        <p><strong>Date:</strong> {{ current_date }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Terms of Clinical Service{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 space-y-8">
+    <div class="space-y-2 border-b border-slate-200 dark:border-zinc-800 pb-6">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Legal Agreement</span>
+        <h1 class="font-display font-bold text-3xl text-slate-900 dark:text-white">Terms of Clinical Service</h1>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">Standard Clinical Service Terms</p>
+    </div>
+
+    <div class="space-y-6 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+        <section class="space-y-2">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white">1. Clinical Scope & Telemedicine Limitations</h2>
+            <p>MediCore Pro provides real-time audiovisual consultation, appointment scheduling, and electronic prescription workflow services for licensed medical practitioners and enrolled patients. Telemedicine services are strictly reserved for non-emergent medical assessments. In life-threatening emergencies, patients must immediately contact localized emergency dispatch (911/112).</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white">2. Patient Responsibilities & Credential Integrity</h2>
+            <p>Users are required to provide authentic, verifiable identification and maintain accurate medical history records. Account credentials must remain confidential. Practitioners agree to operate solely within their licensed jurisdictions and maintain active board certifications.</p>
+        </section>
+
+        <section class="space-y-2">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark:text-white">3. Prescription Orders & Medication Compliance</h2>
+            <p>E-prescriptions generated through this portal represent clinical decisions by independent attending physicians. Prescriptions must be fulfilled by accredited pharmacies adhering to regional scheduled pharmaceutical regulations.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Edit Patient - {{ patient.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6 space-y-6">
+
+    <!-- Header Section -->
+    <div class="space-y-1 pb-6 border-b border-slate-200/90 dark:border-zinc-800">
+        <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Patient Management</span>
+        <h1 class="font-display font-bold text-2xl text-slate-900 dark:text-white">
+            Edit Patient Profile
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-zinc-400">
+            Modify patient demographic details, date of birth, or reset security credentials.
+        </p>
+    </div>
+
+    <!-- Edit Form Card -->
+    <form method="POST" class="p-6 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-subtle space-y-4">
+        
+        <div class="space-y-1">
+            <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Full Name</label>
+            <input type="text" id="name" name="name" value="{{ patient.name }}" required
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="space-y-1">
+            <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Email Address (Immutable)</label>
+            <input type="email" id="email" name="email" value="{{ patient.email }}" readonly
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-100 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 cursor-not-allowed">
+            <span class="text-[10px] text-slate-400">System identifier email cannot be modified.</span>
+        </div>
+
+        <div class="space-y-1">
+            <label for="date_of_birth" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">Date of Birth</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" value="{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '' }}"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="space-y-1">
+            <label for="password" class="block text-xs font-semibold text-slate-700 dark:text-zinc-300">New Password (Optional)</label>
+            <input type="password" id="password" name="password" placeholder="Leave blank to preserve current password"
+                   class="w-full px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100 dark:border-zinc-800">
+            <a href="{{ url_for('admin.manage_patients') }}"
+               class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800">
+                Cancel
+            </a>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm spring-action">
+                Save Changes
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
